@@ -462,6 +462,7 @@
                 <div class="card-title">⏱️ 秒表计时</div>
                 <div style="text-align:center;padding:20px 0">
                     <div id="timerDisplay" style="font-size:3.5em;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:2px;color:var(--accent);text-shadow:0 0 20px rgba(233,69,96,0.3)">00:00:00.0</div>
+                    <div id="timerScore" style="margin-top:12px;font-size:1.2em;color:var(--text-muted);transition:all 0.3s">得分: <span id="timerScoreVal" style="color:var(--gold);font-weight:700">0</span> 分</div>
                     <div style="margin-top:30px;display:flex;gap:12px;justify-content:center">
                         <button class="btn" id="btnStart" onclick="toggleTimer()" style="width:auto;padding:14px 32px;background:linear-gradient(135deg,var(--success),#27ae60);color:white;border-radius:50px">▶ 开始</button>
                         <button class="btn" id="btnLap" onclick="recordLap()" style="width:auto;padding:14px 24px;background:var(--bg-input);color:var(--text-muted);border-radius:50px;opacity:0.5" disabled>🏷 记圈</button>
@@ -644,6 +645,24 @@
             const now = performance.now();
             const total = timerElapsed + (timerRunning ? now - timerStart : 0);
             document.getElementById('timerDisplay').textContent = formatTime(total);
+            document.getElementById('timerScoreVal').textContent = calculateTimerScore(total);
+        }
+
+        function calculateTimerScore(ms) {
+            const seconds = ms / 1000;
+            if (seconds < 1) return 0;
+            // 对数增长：越长越高，但增速递减
+            // 30s≈30分, 1min≈45分, 3min≈65分, 5min≈75分, 10min≈85分, 20min≈95分, 30min≈100分
+            const score = Math.min(100, Math.round(22 * Math.log(seconds / 5 + 1) + 10));
+            return score;
+        }
+
+        function getTimerGrade(score) {
+            if (score >= 90) return { grade: 'S', emoji: '🏆', label: '耐力王' };
+            if (score >= 75) return { grade: 'A', emoji: '🐂', label: '持久型' };
+            if (score >= 60) return { grade: 'B', emoji: '👍', label: '不错' };
+            if (score >= 40) return { grade: 'C', emoji: '💪', label: '还行' };
+            return { grade: 'D', emoji: '⏱️', label: '加油' };
         }
 
         function toggleTimer() {
@@ -656,6 +675,9 @@
                 timerRunning = false;
                 btn.textContent = '▶ 继续';
                 btn.style.background = 'linear-gradient(135deg,var(--success),#27ae60)';
+                // 显示最终得分
+                const finalScore = calculateTimerScore(timerElapsed);
+                document.getElementById('timerScoreVal').textContent = finalScore + ' 🎉';
                 btnLap.disabled = true;
                 btnLap.style.opacity = '0.5';
                 // 保存记录
@@ -703,6 +725,7 @@
             timerStart = 0;
             lapTimes = [];
             document.getElementById('timerDisplay').textContent = '00:00:00.0';
+            document.getElementById('timerScoreVal').textContent = '0';
             const btn = document.getElementById('btnStart');
             btn.textContent = '▶ 开始';
             btn.style.background = 'linear-gradient(135deg,var(--success),#27ae60)';
@@ -713,11 +736,15 @@
 
         function saveTimerRecord(ms) {
             if (ms < 1000) return;
+            const score = calculateTimerScore(ms);
+            const grade = getTimerGrade(score);
             const history = getTimerHistory();
             history.unshift({
                 id: Date.now(),
                 duration: ms,
                 laps: lapTimes.length,
+                score: score,
+                grade: grade.grade,
                 date: new Date().toLocaleString('zh-CN')
             });
             if (history.length > 50) history.length = 50;
@@ -732,15 +759,17 @@
                 list.innerHTML = '<div class="empty-state"><div class="emoji">⏱️</div><div>还没有计时记录</div></div>';
                 return;
             }
-            list.innerHTML = history.slice(0, 20).map(r => `
+            list.innerHTML = history.slice(0, 20).map(r => {
+                const g = r.score ? getTimerGrade(r.score) : null;
+                return `
                 <div class="history-item">
                     <div>
-                        <div class="history-val">${formatTime(r.duration)}</div>
-                        <div class="history-date">${r.date}${r.laps > 0 ? ' · ' + r.laps + '圈' : ''}</div>
+                        <div class="history-val">${formatTime(r.duration)} ${g ? `<span class="grade-badge grade-${g.grade}" style="font-size:0.7em;padding:2px 8px;margin-left:6px">${g.emoji} ${r.score}分</span>` : ''}</div>
+                        <div class="history-date">${r.date}${r.laps > 0 ? ' · ' + r.laps + '圈' : ''}${g ? ' · ' + g.label : ''}</div>
                     </div>
                     <button class="history-delete" onclick="deleteTimerRecord(${r.id})" title="删除">🗑️</button>
-                </div>
-            `).join('');
+                </div>`;
+            }).join('');
         }
 
         function deleteTimerRecord(id) {

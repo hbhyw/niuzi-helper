@@ -386,9 +386,44 @@
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+
+        /* 飘动文字 */
+        .float-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 9999;
+            pointer-events: none;
+            overflow: hidden;
+            animation: overlayFade 6s ease-in forwards;
+        }
+        .float-text {
+            position: absolute;
+            font-weight: 700;
+            white-space: nowrap;
+            animation: floatDrift 4s ease-in-out infinite alternate, floatFade 6s ease-in forwards;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        @keyframes floatDrift {
+            0% { transform: translate(0, 0) rotate(-5deg); }
+            100% { transform: translate(var(--dx), var(--dy)) rotate(5deg); }
+        }
+        @keyframes overlayFade {
+            0%, 70% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+        @keyframes floatFade {
+            0% { opacity: 0; transform: scale(0.5); }
+            15% { opacity: 1; transform: scale(1); }
+            85% { opacity: 1; }
+            100% { opacity: 0; }
+        }
     </style>
 </head>
 <body>
+    <!-- 飘动文字 -->
+    <div class="float-overlay" id="floatOverlay"></div>
+
     <div class="container">
         <div class="header">
             <h1>🐂 牛子小助手</h1>
@@ -1006,6 +1041,37 @@
         // 初始化
         renderHistory();
         renderTimerHistory();
+        initFloatingText();
+
+        function initFloatingText() {
+            const overlay = document.getElementById('floatOverlay');
+            const texts = ['关注塔菲谢谢喵', '🐱 关注塔菲', '谢谢喵~', '✨ 塔菲最棒', '关注谢谢喵'];
+            const colors = ['#e94560', '#ffd700', '#2ecc71', '#3498db', '#f39c12', '#e74c3c', '#9b59b6'];
+            const count = 18;
+            for (let i = 0; i < count; i++) {
+                const el = document.createElement('div');
+                el.className = 'float-text';
+                el.textContent = texts[i % texts.length];
+                const size = 14 + Math.random() * 22;
+                const x = Math.random() * 90;
+                const y = Math.random() * 90;
+                const dx = (Math.random() - 0.5) * 120;
+                const dy = (Math.random() - 0.5) * 80;
+                const delay = Math.random() * 2;
+                const dur = 3 + Math.random() * 3;
+                el.style.cssText = `
+                    left: ${x}vw; top: ${y}vh;
+                    font-size: ${size}px;
+                    color: ${colors[i % colors.length]};
+                    --dx: ${dx}px; --dy: ${dy}px;
+                    animation-delay: ${delay}s, 0s;
+                    animation-duration: ${dur}s, 6s;
+                    opacity: 0;
+                `;
+                overlay.appendChild(el);
+            }
+            setTimeout(() => overlay.remove(), 6500);
+        }
     </script>
 </body>
 </html>

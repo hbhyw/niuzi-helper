@@ -41,10 +41,29 @@
 双击 `start.bat`，自动启动本地服务器（支持 Python 或 Node.js），然后访问 http://localhost:8080
 
 ### 方式三：Docker 部署
+
+#### 快速启动
 ```bash
+git clone https://github.com/hbhyw/niuzi-helper.git
+cd niuzi-helper
 docker compose up -d
 ```
 然后访问 http://localhost:8080
+
+#### 手动部署（不用 docker compose）
+```bash
+git clone https://github.com/hbhyw/niuzi-helper.git
+cd niuzi-helper
+docker build -t niuzi-helper .
+docker run -d --name niuzi-helper -p 8080:80 --restart unless-stopped niuzi-helper
+```
+
+#### 常用命令
+```bash
+docker logs niuzi-helper        # 查看日志
+docker restart niuzi-helper     # 重启
+docker rm -f niuzi-helper       # 删除容器
+```
 
 ### 方式四：在线访问
 直接打开 [https://hbhyw.github.io/niuzi-helper/](https://hbhyw.github.io/niuzi-helper/)

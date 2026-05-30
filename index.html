@@ -730,7 +730,7 @@
             });
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
-            if (tab === 'stats') updateStats();
+            if (tab === 'stats') { updateStats(); renderCalendar(); }
             if (tab === 'tools') { renderAchievements(); renderGoal(); }
         }
 

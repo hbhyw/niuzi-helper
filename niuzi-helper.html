@@ -826,11 +826,22 @@
                 return;
             }
 
-            list.innerHTML = records.slice(0, 20).map(r => `
+            // 计算每次的累计平均（从最早到最新）
+            const reversed = [...records].reverse();
+            const cumAvg = reversed.map((r, i) => {
+                const subset = reversed.slice(0, i + 1);
+                const erect = subset.filter(s => s.state === 'erect');
+                return {
+                    avgLen: erect.length > 0 ? (erect.reduce((s, x) => s + x.length, 0) / erect.length).toFixed(1) : '--',
+                    avgGirth: erect.length > 0 ? (erect.reduce((s, x) => s + x.girth, 0) / erect.length).toFixed(1) : '--'
+                };
+            }).reverse();
+
+            list.innerHTML = records.slice(0, 20).map((r, i) => `
                 <div class="history-item">
                     <div>
                         <div class="history-val">${r.length} cm × ${r.girth} cm</div>
-                        <div class="history-date">${r.date} · ${r.state === 'erect' ? '🔥勃起' : '😴疲软'} · ${r.score}分</div>
+                        <div class="history-date">${r.date} · ${r.state === 'erect' ? '🔥勃起' : '😴疲软'} · ${r.score}分 · 📊均值 ${cumAvg[i].avgLen}×${cumAvg[i].avgGirth}</div>
                     </div>
                     <button class="history-delete" onclick="deleteRecord(${r.id})" title="删除">🗑️</button>
                 </div>
@@ -960,6 +971,42 @@
                 ctx.lineWidth = 2;
                 ctx.stroke();
             });
+
+            // 累计平均线
+            const cumAvgPoints = data.map((d, i) => {
+                const subset = data.slice(0, i + 1);
+                const avg = subset.reduce((s, x) => s + x.length, 0) / subset.length;
+                return {
+                    x: padding.left + (i / (data.length - 1)) * chartW,
+                    y: padding.top + (1 - (avg - minV) / range) * chartH
+                };
+            });
+
+            ctx.beginPath();
+            cumAvgPoints.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([6, 4]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 图例
+            ctx.font = '11px sans-serif';
+            ctx.fillStyle = '#e94560';
+            ctx.fillRect(w - 120, 8, 12, 3);
+            ctx.fillStyle = '#999';
+            ctx.textAlign = 'left';
+            ctx.fillText('实际值', w - 104, 13);
+
+            ctx.fillStyle = '#ffd700';
+            ctx.fillRect(w - 120, 20, 12, 3);
+            ctx.setLineDash([3, 2]);
+            ctx.strokeStyle = '#ffd700';
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(w - 120, 21); ctx.lineTo(w - 108, 21); ctx.stroke();
+            ctx.setLineDash([]);
+            ctx.fillStyle = '#999';
+            ctx.fillText('累计均值', w - 104, 25);
         }
 
         // 初始化

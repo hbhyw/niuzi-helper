@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🐂 牛子小助手</title>
+    <style>
+        :root {
+            --primary: #e74c3c;
+            --primary-dark: #c0392b;
+            --bg: #1a1a2e;
+            --bg-card: #16213e;
+            --bg-input: #0f3460;
+            --text: #eee;
+            --text-muted: #999;
+            --accent: #e94560;
+            --success: #2ecc71;
+            --warning: #f39c12;
+            --gold: #ffd700;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            padding: 30px 0 20px;
+        }
+
+        .header h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 0.9em;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .card-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85em;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid transparent;
+            border-radius: 12px;
+            background: var(--bg-input);
+            color: var(--text);
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus, select:focus {
+            border-color: var(--accent);
+        }
+
+        input[type="number"]::-webkit-inner-spin-button {
+            opacity: 1;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(233, 69, 96, 0.4);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: transparent;
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            margin-top: 10px;
+        }
+
+        .btn-danger:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .result-box {
+            text-align: center;
+            padding: 24px;
+            background: linear-gradient(135deg, rgba(233,69,96,0.15), rgba(192,57,43,0.15));
+            border-radius: 16px;
+            border: 2px solid rgba(233,69,96,0.3);
+            margin-top: 16px;
+            display: none;
+        }
+
+        .result-box.show { display: block; animation: fadeIn 0.5s; }
+
+        .result-emoji { font-size: 3em; margin-bottom: 8px; }
+
+        .result-label {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .result-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .result-desc {
+            margin-top: 12px;
+            font-size: 0.9em;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.95em;
+            margin-top: 8px;
+        }
+
+        .grade-S { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #333; }
+        .grade-A { background: linear-gradient(135deg, #2ecc71, #27ae60); color: white; }
+        .grade-B { background: linear-gradient(135deg, #3498db, #2980b9); color: white; }
+        .grade-C { background: linear-gradient(135deg, #f39c12, #e67e22); color: white; }
+        .grade-D { background: linear-gradient(135deg, #95a5a6, #7f8c8d); color: white; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-item {
+            background: var(--bg-input);
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+
+        .history-item:hover {
+            transform: translateX(4px);
+            background: rgba(233,69,96,0.1);
+        }
+
+        .history-date {
+            font-size: 0.8em;
+            color: var(--text-muted);
+        }
+
+        .history-val {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .history-delete {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-size: 1.1em;
+            padding: 4px 8px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .history-delete:hover {
+            color: var(--accent);
+            background: rgba(233,69,96,0.2);
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 200px;
+            position: relative;
+            margin-top: 16px;
+        }
+
+        canvas { width: 100% !important; height: 100% !important; }
+
+        .tip-card {
+            background: linear-gradient(135deg, rgba(46,204,113,0.1), rgba(39,174,96,0.1));
+            border: 1px solid rgba(46,204,113,0.3);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 12px;
+        }
+
+        .tip-title {
+            font-size: 0.85em;
+            color: var(--success);
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .tip-text {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: var(--bg-input);
+            color: var(--text-muted);
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .faq-item {
+            margin-bottom: 12px;
+        }
+
+        .faq-q {
+            font-weight: 600;
+            font-size: 0.9em;
+            margin-bottom: 4px;
+        }
+
+        .faq-a {
+            font-size: 0.85em;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: var(--text-muted);
+        }
+
+        .empty-state .emoji { font-size: 2.5em; margin-bottom: 10px; }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #444;
+            font-size: 0.75em;
+        }
+
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.7em;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.8s ease;
+            background: linear-gradient(90deg, var(--accent), var(--gold));
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .pulse { animation: pulse 2s infinite; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐂 牛子小助手</h1>
+            <p>科学记录 · 隐私本地 · 趣味分析</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('measure')">📏 测量</button>
+            <button class="tab" onclick="switchTab('timer')">⏱️ 计时</button>
+            <button class="tab" onclick="switchTab('stats')">📊 统计</button>
+            <button class="tab" onclick="switchTab('tips')">💡 科普</button>
+        </div>
+
+        <!-- 测量页 -->
+        <div id="tab-measure" class="tab-content active">
+            <div class="card">
+                <div class="card-title">📏 记录测量</div>
+                <div class="input-group">
+                    <label>长度 (cm)</label>
+                    <input type="number" id="length" step="0.1" min="1" max="30" placeholder="输入长度">
+                    <div class="range-labels">
+                        <span>1 cm</span>
+                        <span>15 cm</span>
+                        <span>30 cm</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>周长 (cm)</label>
+                    <input type="number" id="girth" step="0.1" min="1" max="20" placeholder="输入周长">
+                    <div class="range-labels">
+                        <span>1 cm</span>
+                        <span>10 cm</span>
+                        <span>20 cm</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>状态</label>
+                    <select id="state">
+                        <option value="erect">🔥 勃起</option>
+                        <option value="flaccid">😴 疲软</option>
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="saveRecord()">💾 保存记录</button>
+
+                <div class="result-box" id="resultBox">
+                    <div class="result-emoji" id="resultEmoji">🐂</div>
+                    <div class="result-label">综合评分</div>
+                    <div class="result-value" id="resultScore">--</div>
+                    <div class="grade-badge" id="resultGrade">--</div>
+                    <div class="result-desc" id="resultDesc"></div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📋 历史记录</div>
+                <div class="history-list" id="historyList">
+                    <div class="empty-state">
+                        <div class="emoji">📭</div>
+                        <div>还没有记录，快来测量一下吧~</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 计时页 -->
+        <div id="tab-timer" class="tab-content">
+            <div class="card">
+                <div class="card-title">⏱️ 秒表计时</div>
+                <div style="text-align:center;padding:20px 0">
+                    <div id="timerDisplay" style="font-size:3.5em;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:2px;color:var(--accent);text-shadow:0 0 20px rgba(233,69,96,0.3)">00:00:00.0</div>
+                    <div style="margin-top:30px;display:flex;gap:12px;justify-content:center">
+                        <button class="btn" id="btnStart" onclick="toggleTimer()" style="width:auto;padding:14px 32px;background:linear-gradient(135deg,var(--success),#27ae60);color:white;border-radius:50px">▶ 开始</button>
+                        <button class="btn" id="btnLap" onclick="recordLap()" style="width:auto;padding:14px 24px;background:var(--bg-input);color:var(--text-muted);border-radius:50px;opacity:0.5" disabled>🏷 记圈</button>
+                        <button class="btn" onclick="resetTimer()" style="width:auto;padding:14px 24px;background:var(--bg-input);color:var(--text-muted);border-radius:50px">↺ 重置</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" id="lapCard" style="display:none">
+                <div class="card-title">🏷 圈数记录</div>
+                <div class="history-list" id="lapList"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📜 计时历史</div>
+                <div class="history-list" id="timerHistory">
+                    <div class="empty-state">
+                        <div class="emoji">⏱️</div>
+                        <div>还没有计时记录</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计页 -->
+        <div id="tab-stats" class="tab-content">
+            <div class="card">
+                <div class="card-title">📊 数据概览</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="statCount">0</div>
+                        <div class="stat-label">总记录数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statAvgLen">--</div>
+                        <div class="stat-label">平均长度 (cm)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statMaxLen">--</div>
+                        <div class="stat-label">最大长度 (cm)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="statAvgGirth">--</div>
+                        <div class="stat-label">平均周长 (cm)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📈 趋势图</div>
+                <div class="chart-container">
+                    <canvas id="chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🏆 评级分布</div>
+                <div id="gradeDistribution"></div>
+            </div>
+        </div>
+
+        <!-- 科普页 -->
+        <div id="tab-tips" class="tab-content">
+            <div class="card">
+                <div class="card-title">💡 科学小知识</div>
+                <div class="tip-card">
+                    <div class="tip-title">📏 全球平均数据</div>
+                    <div class="tip-text">根据多项国际研究，勃起状态平均长度约为 13.12 cm，周长约 11.66 cm。大多数男性（约 68%）在 11-16 cm 范围内。</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">🌡️ 温度影响</div>
+                    <div class="tip-text">寒冷、紧张或运动后，尺寸会有自然变化。建议在温暖放松的环境下测量，保持一致性。</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">📐 测量方法</div>
+                    <div class="tip-text">长度：从耻骨联合处（压到骨头）沿背侧量到顶端。周长：在最粗处绕一圈。使用软尺，不要拉扯。</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">⏰ 最佳测量时间</div>
+                    <div class="tip-text">早晨勃起时测量最稳定，因为此时身体状态最自然。建议每周同一时间测量，追踪变化趋势。</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">🧘 健康比尺寸重要</div>
+                    <div class="tip-text">良好的血液循环、规律运动和健康饮食对功能的影响远大于尺寸本身。深蹲、凯格尔运动都有帮助。</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">❓ 常见问题</div>
+                <div class="faq-item">
+                    <div class="faq-q">Q: 尺寸会随年龄变化吗？</div>
+                    <div class="faq-a">A: 20-30岁通常是巅峰期。40岁后可能因血液循环变化略有差异，但保持健康生活方式可以维持状态。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q: 疲软和勃起大小有关联吗？</div>
+                    <div class="faq-a">A: 有关联但非绝对。有些人疲软时较小但勃起后增长比例大（grower），有些人变化不大（shower）。</div>
+                </div>
+                <div class="faq-item">
+                    <div class="faq-q">Q: 如何科学增大？</div>
+                    <div class="faq-a">A: 目前没有可靠的非手术方法。保持健康体重可以减少耻骨脂肪垫的遮盖，视觉上会更长。锻炼PC肌有助于勃起质量。</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">💪 锻炼建议</div>
+                <div class="tip-card">
+                    <div class="tip-title">🏋️ 凯格尔运动</div>
+                    <div class="tip-text">收缩PC肌（憋尿时用的肌肉）5秒，放松5秒，重复10-15次，每天3组。可改善勃起硬度和持久力。</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">🏃 有氧运动</div>
+                    <div class="tip-text">每周150分钟中等强度有氧运动（跑步、游泳、骑行），改善心血管健康和下半身血液循环。</div>
+                </div>
+                <div class="tip-card">
+                    <div class="tip-title">🥗 饮食建议</div>
+                    <div class="tip-text">富含锌（生蚝、坚果）、精氨酸（肉类、豆类）、抗氧化剂（深色蔬果）的食物有助于生殖健康。</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            🔒 所有数据仅保存在本地浏览器，不会上传到任何服务器<br>
+            牛子小助手 v1.0 · 纯属娱乐，请勿过度焦虑
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'niuzi_records';
+
+        function getRecords() {
+            try {
+                return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            } catch { return []; }
+        }
+
+        function saveRecords(records) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach((t, i) => {
+                t.classList.toggle('active', ['measure','timer','stats','tips'][i] === tab);
+            });
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + tab).classList.add('active');
+            if (tab === 'stats') updateStats();
+        }
+
+        // ===== 计时器 =====
+        const TIMER_KEY = 'niuzi_timer_history';
+        let timerInterval = null;
+        let timerStart = 0;
+        let timerElapsed = 0;
+        let timerRunning = false;
+        let lapTimes = [];
+
+        function getTimerHistory() {
+            try { return JSON.parse(localStorage.getItem(TIMER_KEY) || '[]'); } catch { return []; }
+        }
+
+        function saveTimerHistory(records) {
+            localStorage.setItem(TIMER_KEY, JSON.stringify(records));
+        }
+
+        function formatTime(ms) {
+            const h = Math.floor(ms / 3600000);
+            const m = Math.floor((ms % 3600000) / 60000);
+            const s = Math.floor((ms % 60000) / 1000);
+            const d = Math.floor((ms % 1000) / 100);
+            return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}.${d}`;
+        }
+
+        function formatTimeShort(ms) {
+            const m = Math.floor(ms / 60000);
+            const s = Math.floor((ms % 60000) / 1000);
+            return m > 0 ? `${m}分${s}秒` : `${s}秒`;
+        }
+
+        function updateTimerDisplay() {
+            const now = performance.now();
+            const total = timerElapsed + (timerRunning ? now - timerStart : 0);
+            document.getElementById('timerDisplay').textContent = formatTime(total);
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('btnStart');
+            const btnLap = document.getElementById('btnLap');
+            if (timerRunning) {
+                // 暂停
+                timerElapsed += performance.now() - timerStart;
+                clearInterval(timerInterval);
+                timerRunning = false;
+                btn.textContent = '▶ 继续';
+                btn.style.background = 'linear-gradient(135deg,var(--success),#27ae60)';
+                btnLap.disabled = true;
+                btnLap.style.opacity = '0.5';
+                // 保存记录
+                saveTimerRecord(timerElapsed);
+            } else {
+                // 开始
+                timerStart = performance.now();
+                timerRunning = true;
+                timerInterval = setInterval(updateTimerDisplay, 50);
+                btn.textContent = '⏸ 暂停';
+                btn.style.background = 'linear-gradient(135deg,var(--warning),#e67e22)';
+                btnLap.disabled = false;
+                btnLap.style.opacity = '1';
+            }
+        }
+
+        function recordLap() {
+            if (!timerRunning) return;
+            const now = performance.now();
+            const total = timerElapsed + now - timerStart;
+            const prevLap = lapTimes.length > 0 ? lapTimes[lapTimes.length - 1].total : 0;
+            lapTimes.push({ lap: lapTimes.length + 1, total, diff: total - prevLap });
+            renderLaps();
+        }
+
+        function renderLaps() {
+            const card = document.getElementById('lapCard');
+            const list = document.getElementById('lapList');
+            if (lapTimes.length === 0) { card.style.display = 'none'; return; }
+            card.style.display = 'block';
+            list.innerHTML = lapTimes.slice().reverse().map(l => `
+                <div class="history-item">
+                    <div>
+                        <div class="history-val">圈 ${l.lap}</div>
+                        <div class="history-date">+${formatTime(l.diff)} · 总计 ${formatTime(l.total)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timerRunning = false;
+            timerElapsed = 0;
+            timerStart = 0;
+            lapTimes = [];
+            document.getElementById('timerDisplay').textContent = '00:00:00.0';
+            const btn = document.getElementById('btnStart');
+            btn.textContent = '▶ 开始';
+            btn.style.background = 'linear-gradient(135deg,var(--success),#27ae60)';
+            document.getElementById('btnLap').disabled = true;
+            document.getElementById('btnLap').style.opacity = '0.5';
+            renderLaps();
+        }
+
+        function saveTimerRecord(ms) {
+            if (ms < 1000) return;
+            const history = getTimerHistory();
+            history.unshift({
+                id: Date.now(),
+                duration: ms,
+                laps: lapTimes.length,
+                date: new Date().toLocaleString('zh-CN')
+            });
+            if (history.length > 50) history.length = 50;
+            saveTimerHistory(history);
+            renderTimerHistory();
+        }
+
+        function renderTimerHistory() {
+            const history = getTimerHistory();
+            const list = document.getElementById('timerHistory');
+            if (history.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="emoji">⏱️</div><div>还没有计时记录</div></div>';
+                return;
+            }
+            list.innerHTML = history.slice(0, 20).map(r => `
+                <div class="history-item">
+                    <div>
+                        <div class="history-val">${formatTime(r.duration)}</div>
+                        <div class="history-date">${r.date}${r.laps > 0 ? ' · ' + r.laps + '圈' : ''}</div>
+                    </div>
+                    <button class="history-delete" onclick="deleteTimerRecord(${r.id})" title="删除">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        function deleteTimerRecord(id) {
+            let history = getTimerHistory();
+            history = history.filter(r => r.id !== id);
+            saveTimerHistory(history);
+            renderTimerHistory();
+        }
+
+        function calculateScore(length, girth, state) {
+            // 基于全球平均数据的评分模型
+            const avgLen = state === 'erect' ? 13.12 : 9.16;
+            const avgGirth = state === 'erect' ? 11.66 : 9.31;
+            const stdLen = 1.66;
+            const stdGirth = 1.1;
+
+            const lenZ = (length - avgLen) / stdLen;
+            const girthZ = (girth - avgGirth) / stdGirth;
+
+            // 综合评分：长度权重60%，周长权重40%
+            const rawScore = (lenZ * 0.6 + girthZ * 0.4) * 15 + 70;
+            return Math.max(0, Math.min(100, Math.round(rawScore)));
+        }
+
+        function getGrade(score) {
+            if (score >= 90) return { grade: 'S', emoji: '🏆', label: '传说级', desc: '恭喜！你已经超越了绝大多数人，属于天赋异禀！' };
+            if (score >= 75) return { grade: 'A', emoji: '🐂', label: '优秀', desc: '非常不错的数据，高于平均水平，自信点！' };
+            if (score >= 60) return { grade: 'B', emoji: '👍', label: '良好', desc: '处于正常范围，属于大众水平，完全没问题。' };
+            if (score >= 45) return { grade: 'C', emoji: '🤷', label: '一般', desc: '略低于平均，但仍在正常范围，功能比尺寸更重要。' };
+            return { grade: 'D', emoji: '💪', label: '加油', desc: '低于平均值，但别灰心，技巧和态度才是关键！' };
+        }
+
+        function saveRecord() {
+            const length = parseFloat(document.getElementById('length').value);
+            const girth = parseFloat(document.getElementById('girth').value);
+            const state = document.getElementById('state').value;
+
+            if (!length || !girth || length < 1 || girth < 1) {
+                alert('请输入有效的测量数据 😅');
+                return;
+            }
+
+            const score = calculateScore(length, girth, state);
+            const gradeInfo = getGrade(score);
+
+            const record = {
+                id: Date.now(),
+                length, girth, state, score,
+                grade: gradeInfo.grade,
+                date: new Date().toLocaleString('zh-CN')
+            };
+
+            const records = getRecords();
+            records.unshift(record);
+            saveRecords(records);
+
+            // 显示结果
+            const box = document.getElementById('resultBox');
+            box.classList.add('show');
+            document.getElementById('resultEmoji').textContent = gradeInfo.emoji;
+            document.getElementById('resultScore').textContent = score + ' 分';
+            document.getElementById('resultGrade').textContent = gradeInfo.grade + ' · ' + gradeInfo.label;
+            document.getElementById('resultGrade').className = 'grade-badge grade-' + gradeInfo.grade;
+            document.getElementById('resultDesc').textContent = gradeInfo.desc;
+            document.getElementById('progressFill').style.width = score + '%';
+
+            renderHistory();
+        }
+
+        function deleteRecord(id) {
+            let records = getRecords();
+            records = records.filter(r => r.id !== id);
+            saveRecords(records);
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const records = getRecords();
+            const list = document.getElementById('historyList');
+
+            if (records.length === 0) {
+                list.innerHTML = '<div class="empty-state"><div class="emoji">📭</div><div>还没有记录，快来测量一下吧~</div></div>';
+                return;
+            }
+
+            list.innerHTML = records.slice(0, 20).map(r => `
+                <div class="history-item">
+                    <div>
+                        <div class="history-val">${r.length} cm × ${r.girth} cm</div>
+                        <div class="history-date">${r.date} · ${r.state === 'erect' ? '🔥勃起' : '😴疲软'} · ${r.score}分</div>
+                    </div>
+                    <button class="history-delete" onclick="deleteRecord(${r.id})" title="删除">🗑️</button>
+                </div>
+            `).join('');
+        }
+
+        function updateStats() {
+            const records = getRecords();
+            const erectRecords = records.filter(r => r.state === 'erect');
+
+            document.getElementById('statCount').textContent = records.length;
+
+            if (erectRecords.length > 0) {
+                const avgLen = (erectRecords.reduce((s, r) => s + r.length, 0) / erectRecords.length).toFixed(1);
+                const maxLen = Math.max(...erectRecords.map(r => r.length)).toFixed(1);
+                const avgGirth = (erectRecords.reduce((s, r) => s + r.girth, 0) / erectRecords.length).toFixed(1);
+
+                document.getElementById('statAvgLen').textContent = avgLen;
+                document.getElementById('statMaxLen').textContent = maxLen;
+                document.getElementById('statAvgGirth').textContent = avgGirth;
+            }
+
+            // 评级分布
+            const grades = { S: 0, A: 0, B: 0, C: 0, D: 0 };
+            records.forEach(r => grades[r.grade] = (grades[r.grade] || 0) + 1);
+
+            const distDiv = document.getElementById('gradeDistribution');
+            const total = records.length || 1;
+            distDiv.innerHTML = Object.entries(grades).map(([g, count]) => {
+                const pct = Math.round(count / total * 100);
+                const colors = { S: '#ffd700', A: '#2ecc71', B: '#3498db', C: '#f39c12', D: '#95a5a6' };
+                return `
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                        <span style="width:30px;font-weight:700;color:${colors[g]}">${g}</span>
+                        <div style="flex:1;height:20px;background:var(--bg-input);border-radius:10px;overflow:hidden;">
+                            <div style="height:100%;width:${pct}%;background:${colors[g]};border-radius:10px;transition:width 0.5s"></div>
+                        </div>
+                        <span style="width:50px;text-align:right;font-size:0.85em;color:var(--text-muted)">${count}次</span>
+                    </div>
+                `;
+            }).join('');
+
+            drawChart(records);
+        }
+
+        function drawChart(records) {
+            const canvas = document.getElementById('chart');
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width * 2;
+            canvas.height = rect.height * 2;
+            ctx.scale(2, 2);
+
+            const w = rect.width;
+            const h = rect.height;
+            const data = records.filter(r => r.state === 'erect').reverse().slice(-14);
+
+            ctx.clearRect(0, 0, w, h);
+
+            if (data.length < 2) {
+                ctx.fillStyle = '#666';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('需要至少2条勃起记录才能显示趋势', w/2, h/2);
+                return;
+            }
+
+            const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+            const chartW = w - padding.left - padding.right;
+            const chartH = h - padding.top - padding.bottom;
+
+            const values = data.map(d => d.length);
+            const minV = Math.floor(Math.min(...values) - 1);
+            const maxV = Math.ceil(Math.max(...values) + 1);
+            const range = maxV - minV || 1;
+
+            // 网格线
+            ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= 4; i++) {
+                const y = padding.top + (chartH / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(w - padding.right, y);
+                ctx.stroke();
+
+                ctx.fillStyle = '#666';
+                ctx.font = '10px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.fillText((maxV - (range / 4) * i).toFixed(1), padding.left - 5, y + 3);
+            }
+
+            // 数据线
+            const points = data.map((d, i) => ({
+                x: padding.left + (i / (data.length - 1)) * chartW,
+                y: padding.top + (1 - (d.length - minV) / range) * chartH
+            }));
+
+            // 渐变填充
+            const gradient = ctx.createLinearGradient(0, padding.top, 0, h - padding.bottom);
+            gradient.addColorStop(0, 'rgba(233, 69, 96, 0.3)');
+            gradient.addColorStop(1, 'rgba(233, 69, 96, 0)');
+
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, h - padding.bottom);
+            points.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.lineTo(points[points.length - 1].x, h - padding.bottom);
+            ctx.closePath();
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // 线条
+            ctx.beginPath();
+            points.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+            ctx.strokeStyle = '#e94560';
+            ctx.lineWidth = 2.5;
+            ctx.lineJoin = 'round';
+            ctx.stroke();
+
+            // 数据点
+            points.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = '#e94560';
+                ctx.fill();
+                ctx.strokeStyle = '#1a1a2e';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            });
+        }
+
+        // 初始化
+        renderHistory();
+        renderTimerHistory();
+    </script>
+</body>
+</html>

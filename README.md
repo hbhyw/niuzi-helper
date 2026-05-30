@@ -40,7 +40,13 @@
 ### 方式二：本地服务
 双击 `start.bat`，自动启动本地服务器（支持 Python 或 Node.js），然后访问 http://localhost:8080
 
-### 方式三：在线访问
+### 方式三：Docker 部署
+```bash
+docker compose up -d
+```
+然后访问 http://localhost:8080
+
+### 方式四：在线访问
 直接打开 [https://hbhyw.github.io/niuzi-helper/](https://hbhyw.github.io/niuzi-helper/)
 
 ## 📝 备注

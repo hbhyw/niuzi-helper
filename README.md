@@ -4,7 +4,7 @@
 
 一个纯前端的趣味小工具，所有数据仅保存在本地浏览器，不会上传到任何服务器。
 
-🔗 **在线体验：** [https://abmmw.github.io/niuzi-helper/](https://abmmw.github.io/niuzi-helper/)
+🔗 **在线体验：** [https://hbhyw.github.io/niuzi-helper/](https://hbhyw.github.io/niuzi-helper/)
 
 ## ✨ 功能
 

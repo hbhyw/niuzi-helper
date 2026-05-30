@@ -418,6 +418,50 @@
             85% { opacity: 1; }
             100% { opacity: 0; }
         }
+
+        /* 亮色主题 */
+        .light {
+            --bg: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #e8ecf1;
+            --text: #1a1a2e;
+            --text-muted: #666;
+            --accent: #e94560;
+        }
+        .light .card { box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .light input[type="number"], .light select { color: #1a1a2e; }
+
+        /* 日历热力图 */
+        .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
+        .cal-day { aspect-ratio:1; border-radius: 4px; background: var(--bg-input); display:flex; align-items:center; justify-content:center; font-size:0.65em; color:var(--text-muted); position:relative; }
+        .cal-day.has::after { content:''; position:absolute; bottom:2px; width:4px; height:4px; border-radius:50%; background:var(--accent); }
+        .cal-day.today { border: 1.5px solid var(--accent); }
+        .cal-label { font-size:0.6em; color:var(--text-muted); text-align:center; padding:4px 0; }
+
+        /* 成就徽章 */
+        .ach-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+        .ach-item { background:var(--bg-input); border-radius:12px; padding:14px 8px; text-align:center; transition:all 0.3s; }
+        .ach-item.locked { opacity:0.35; filter:grayscale(1); }
+        .ach-item.unlocked { border:2px solid var(--gold); box-shadow:0 0 12px rgba(255,215,0,0.3); }
+        .ach-icon { font-size:1.8em; margin-bottom:6px; }
+        .ach-name { font-size:0.75em; font-weight:600; }
+        .ach-desc { font-size:0.6em; color:var(--text-muted); margin-top:3px; }
+
+        /* 目标 */
+        .goal-ring { width:120px; height:120px; margin:0 auto 16px; position:relative; }
+        .goal-ring svg { transform:rotate(-90deg); }
+        .goal-ring-text { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); text-align:center; }
+        .goal-ring-val { font-size:1.4em; font-weight:700; color:var(--accent); }
+        .goal-ring-label { font-size:0.65em; color:var(--text-muted); }
+
+        /* 主题切换按钮 */
+        .theme-btn { position:fixed; top:16px; right:16px; background:var(--bg-card); border:2px solid var(--bg-input); border-radius:50%; width:40px; height:40px; font-size:1.2em; cursor:pointer; z-index:100; display:flex; align-items:center; justify-content:center; transition:all 0.3s; }
+        .theme-btn:hover { transform:scale(1.15); border-color:var(--accent); }
+
+        /* 备注 */
+        .note-input { width:100%; padding:10px 14px; border:2px solid transparent; border-radius:10px; background:var(--bg-input); color:var(--text); font-size:0.85em; outline:none; resize:none; min-height:36px; transition:border-color 0.3s; }
+        .note-input:focus { border-color:var(--accent); }
+        .note-tag { display:inline-block; background:var(--bg-input); padding:2px 8px; border-radius:6px; font-size:0.7em; color:var(--text-muted); margin-top:4px; }
     </style>
 </head>
 <body>
@@ -425,15 +469,17 @@
     <div class="float-overlay" id="floatOverlay"></div>
 
     <div class="container">
-        <div class="header">
+        <div class="header" style="position:relative">
             <h1>🐂 牛子小助手</h1>
             <p>科学记录 · 隐私本地 · 趣味分析</p>
         </div>
+        <button class="theme-btn" onclick="toggleTheme()" id="themeBtn" title="切换主题">🌙</button>
 
         <div class="tabs">
             <button class="tab active" onclick="switchTab('measure')">📏 测量</button>
             <button class="tab" onclick="switchTab('timer')">⏱️ 计时</button>
             <button class="tab" onclick="switchTab('stats')">📊 统计</button>
+            <button class="tab" onclick="switchTab('tools')">🏆 工具</button>
             <button class="tab" onclick="switchTab('tips')">💡 科普</button>
         </div>
 
@@ -465,6 +511,10 @@
                         <option value="erect">🔥 勃起</option>
                         <option value="flaccid">😴 疲软</option>
                     </select>
+                </div>
+                <div class="input-group">
+                    <label>备注（可选）</label>
+                    <textarea class="note-input" id="noteInput" placeholder="状态、心情、环境..." rows="1"></textarea>
                 </div>
                 <button class="btn btn-primary" onclick="saveRecord()">💾 保存记录</button>
 
@@ -551,6 +601,49 @@
                 <div class="card-title">🏆 评级分布</div>
                 <div id="gradeDistribution"></div>
             </div>
+
+            <div class="card">
+                <div class="card-title">📅 记录日历</div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                    <button class="btn" onclick="changeMonth(-1)" style="width:auto;padding:6px 12px;background:var(--bg-input);font-size:0.85em">◀</button>
+                    <span id="calMonth" style="font-weight:600"></span>
+                    <button class="btn" onclick="changeMonth(1)" style="width:auto;padding:6px 12px;background:var(--bg-input);font-size:0.85em">▶</button>
+                </div>
+                <div class="cal-grid" id="calLabels"></div>
+                <div class="cal-grid" id="calGrid"></div>
+            </div>
+        </div>
+
+        <!-- 工具页 -->
+        <div id="tab-tools" class="tab-content">
+            <div class="card">
+                <div class="card-title">🎯 目标设定</div>
+                <div class="input-group">
+                    <label>目标长度 (cm)</label>
+                    <div style="display:flex;gap:10px">
+                        <input type="number" id="goalLen" step="0.1" min="1" max="30" placeholder="如 15" style="flex:1">
+                        <button class="btn" onclick="saveGoal()" style="width:auto;padding:10px 20px;background:var(--accent);color:white;border-radius:10px">设定</button>
+                    </div>
+                </div>
+                <div id="goalDisplay"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🏅 成就徽章</div>
+                <div class="ach-grid" id="achGrid"></div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">📦 数据管理</div>
+                <div style="display:flex;gap:10px">
+                    <button class="btn" onclick="exportData()" style="flex:1;padding:12px;background:var(--success);color:white;border-radius:10px">📤 导出JSON</button>
+                    <button class="btn" onclick="document.getElementById('importFile').click()" style="flex:1;padding:12px;background:var(--bg-input);color:var(--text);border-radius:10px">📥 导入JSON</button>
+                    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+                </div>
+                <div style="margin-top:12px">
+                    <button class="btn" onclick="exportCSV()" style="width:100%;padding:12px;background:var(--bg-input);color:var(--text);border-radius:10px">📊 导出CSV（Excel）</button>
+                </div>
+            </div>
         </div>
 
         <!-- 科普页 -->
@@ -633,11 +726,12 @@
 
         function switchTab(tab) {
             document.querySelectorAll('.tab').forEach((t, i) => {
-                t.classList.toggle('active', ['measure','timer','stats','tips'][i] === tab);
+                t.classList.toggle('active', ['measure','timer','stats','tools','tips'][i] === tab);
             });
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             document.getElementById('tab-' + tab).classList.add('active');
             if (tab === 'stats') updateStats();
+            if (tab === 'tools') { renderAchievements(); renderGoal(); }
         }
 
         // ===== 计时器 =====
@@ -815,10 +909,12 @@
             const score = calculateScore(length, girth, state);
             const gradeInfo = getGrade(score);
 
+            const note = document.getElementById('noteInput').value.trim();
             const record = {
                 id: Date.now(),
                 length, girth, state, score,
                 grade: gradeInfo.grade,
+                note: note || '',
                 date: new Date().toLocaleString('zh-CN')
             };
 
@@ -837,6 +933,8 @@
             document.getElementById('progressFill').style.width = score + '%';
 
             renderHistory();
+            document.getElementById('noteInput').value = '';
+            checkAchievements();
         }
 
         function deleteRecord(id) {
@@ -871,6 +969,7 @@
                     <div>
                         <div class="history-val">${r.length} cm × ${r.girth} cm</div>
                         <div class="history-date">${r.date} · ${r.state === 'erect' ? '🔥勃起' : '😴疲软'} · ${r.score}分 · 📊均值 ${cumAvg[i].avgLen}×${cumAvg[i].avgGirth}</div>
+                        ${r.note ? `<div class="note-tag">📝 ${r.note}</div>` : ''}
                     </div>
                     <button class="history-delete" onclick="deleteRecord(${r.id})" title="删除">🗑️</button>
                 </div>
@@ -1038,9 +1137,214 @@
             ctx.fillText('累计均值', w - 104, 25);
         }
 
+        // ===== 主题切换 =====
+        const THEME_KEY = 'niuzi_theme';
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light');
+            localStorage.setItem(THEME_KEY, isLight ? 'light' : 'dark');
+            document.getElementById('themeBtn').textContent = isLight ? '☀️' : '🌙';
+        }
+        (function initTheme() {
+            const t = localStorage.getItem(THEME_KEY);
+            if (t === 'light') { document.body.classList.add('light'); document.getElementById('themeBtn').textContent = '☀️'; }
+        })();
+
+        // ===== 目标系统 =====
+        const GOAL_KEY = 'niuzi_goal';
+        function getGoal() { return parseFloat(localStorage.getItem(GOAL_KEY)) || 0; }
+        function saveGoal() {
+            const v = parseFloat(document.getElementById('goalLen').value);
+            if (!v || v < 1) return alert('请输入有效目标 😅');
+            localStorage.setItem(GOAL_KEY, v);
+            renderGoal();
+        }
+        function renderGoal() {
+            const goal = getGoal();
+            const el = document.getElementById('goalDisplay');
+            if (!goal) { el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px">还未设定目标</div>'; return; }
+            const records = getRecords().filter(r => r.state === 'erect');
+            const latest = records.length > 0 ? records[0].length : 0;
+            const best = records.length > 0 ? Math.max(...records.map(r => r.length)) : 0;
+            const pct = Math.min(100, Math.round(best / goal * 100));
+            const circumference = 2 * Math.PI * 50;
+            const offset = circumference * (1 - pct / 100);
+            el.innerHTML = `
+                <div class="goal-ring">
+                    <svg width="120" height="120">
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="var(--bg-input)" stroke-width="8"/>
+                        <circle cx="60" cy="60" r="50" fill="none" stroke="${pct >= 100 ? 'var(--success)' : 'var(--accent)'}" stroke-width="8" stroke-dasharray="${circumference}" stroke-dashoffset="${offset}" stroke-linecap="round"/>
+                    </svg>
+                    <div class="goal-ring-text">
+                        <div class="goal-ring-val">${pct}%</div>
+                        <div class="goal-ring-label">${pct >= 100 ? '🎉 达成！' : '进行中'}</div>
+                    </div>
+                </div>
+                <div style="text-align:center;font-size:0.85em;color:var(--text-muted)">
+                    目标 <b style="color:var(--gold)">${goal} cm</b> · 最佳 <b style="color:var(--accent)">${best} cm</b> · 最近 <b>${latest} cm</b>
+                </div>
+            `;
+        }
+
+        // ===== 成就系统 =====
+        const ACH_KEY = 'niuzi_achievements';
+        const ACHIEVEMENTS = [
+            { id:'first', icon:'🎉', name:'初次记录', desc:'完成第一次测量' },
+            { id:'five', icon:'✋', name:'小有积累', desc:'累计5次测量' },
+            { id:'ten', icon:'🔟', name:'十全十美', desc:'累计10次测量' },
+            { id:'streak3', icon:'🔥', name:'三天连续', desc:'连续3天有记录' },
+            { id:'streak7', icon:'⚡', name:'一周坚持', desc:'连续7天有记录' },
+            { id:'above_avg', icon:'🐂', name:'超越平均', desc:'长度超过全球平均' },
+            { id:'score90', icon:'🏆', name:'传说级', desc:'评分达到90分' },
+            { id:'timer5', icon:'⏱️', name:'计时达人', desc:'计时累计5次' },
+            { id:'timer60', icon:'🕐', name:'满一分钟', desc:'单次计时超1分钟' },
+            { id:'goal_hit', icon:'🎯', name:'目标达成', desc:'达到设定的目标' },
+            { id:'note3', icon:'📝', name:'笔记达人', desc:'添加3次备注' },
+            { id:'export', icon:'📤', name:'数据管家', desc:'导出过一次数据' },
+        ];
+        function getUnlocked() { try { return JSON.parse(localStorage.getItem(ACH_KEY) || '[]'); } catch { return []; } }
+        function unlock(id) {
+            const u = getUnlocked();
+            if (u.includes(id)) return;
+            u.push(id);
+            localStorage.setItem(ACH_KEY, JSON.stringify(u));
+        }
+        function checkAchievements() {
+            const records = getRecords();
+            const timerH = getTimerHistory();
+            if (records.length >= 1) unlock('first');
+            if (records.length >= 5) unlock('five');
+            if (records.length >= 10) unlock('ten');
+            if (records.some(r => r.score >= 90)) unlock('score90');
+            if (records.some(r => r.state === 'erect' && r.length > 13.12)) unlock('above_avg');
+            if (records.filter(r => r.note).length >= 3) unlock('note3');
+            if (timerH.length >= 5) unlock('timer5');
+            if (timerH.some(r => r.duration >= 60000)) unlock('timer60');
+            // 连续天数
+            const days = [...new Set(records.map(r => r.date.split(' ')[0]))].sort().reverse();
+            let streak = 1;
+            for (let i = 0; i < days.length - 1; i++) {
+                const d1 = new Date(days[i]), d2 = new Date(days[i+1]);
+                if ((d1 - d2) / 86400000 === 1) streak++; else break;
+            }
+            if (streak >= 3) unlock('streak3');
+            if (streak >= 7) unlock('streak7');
+            // 目标达成
+            const goal = getGoal();
+            if (goal && records.some(r => r.state === 'erect' && r.length >= goal)) unlock('goal_hit');
+        }
+        function renderAchievements() {
+            const unlocked = getUnlocked();
+            const grid = document.getElementById('achGrid');
+            grid.innerHTML = ACHIEVEMENTS.map(a => {
+                const ok = unlocked.includes(a.id);
+                return `<div class="ach-item ${ok ? 'unlocked' : 'locked'}">
+                    <div class="ach-icon">${a.icon}</div>
+                    <div class="ach-name">${a.name}</div>
+                    <div class="ach-desc">${ok ? a.desc : '???'}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // ===== 日历视图 =====
+        let calYear, calMonth;
+        (function() { const n = new Date(); calYear = n.getFullYear(); calMonth = n.getMonth(); })();
+        function changeMonth(d) {
+            calMonth += d;
+            if (calMonth < 0) { calMonth = 11; calYear--; }
+            if (calMonth > 11) { calMonth = 0; calYear++; }
+            renderCalendar();
+        }
+        function renderCalendar() {
+            document.getElementById('calMonth').textContent = `${calYear}年${calMonth + 1}月`;
+            const labels = document.getElementById('calLabels');
+            labels.innerHTML = ['日','一','二','三','四','五','六'].map(d => `<div class="cal-label">${d}</div>`).join('');
+
+            const records = getRecords();
+            const recordDays = new Set(records.map(r => r.date.split(' ')[0]));
+            const grid = document.getElementById('calGrid');
+            const firstDay = new Date(calYear, calMonth, 1).getDay();
+            const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+            const today = new Date();
+            const todayStr = today.toLocaleDateString('zh-CN');
+
+            let html = '';
+            for (let i = 0; i < firstDay; i++) html += '<div class="cal-day"></div>';
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${calYear}/${String(calMonth+1).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+                const has = recordDays.has(dateStr);
+                const isToday = dateStr === todayStr.split(' ').slice(0,3).join('/');
+                html += `<div class="cal-day ${has ? 'has' : ''} ${isToday ? 'today' : ''}">${d}</div>`;
+            }
+            grid.innerHTML = html;
+        }
+
+        // ===== 数据导出 =====
+        function exportData() {
+            const data = {
+                records: getRecords(),
+                timerHistory: getTimerHistory(),
+                goal: getGoal(),
+                achievements: getUnlocked(),
+                theme: localStorage.getItem(THEME_KEY) || 'dark',
+                exportDate: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `niuzi-backup-${new Date().toISOString().slice(0,10)}.json`;
+            a.click(); URL.revokeObjectURL(url);
+            unlock('export');
+        }
+        function exportCSV() {
+            const records = getRecords();
+            if (!records.length) return alert('没有数据可导出');
+            let csv = '\uFEFF日期,长度(cm),周长(cm),状态,评分,等级,备注\n';
+            records.forEach(r => {
+                csv += `${r.date},${r.length},${r.girth},${r.state === 'erect' ? '勃起' : '疲软'},${r.score},${r.grade},"${r.note || ''}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `niuzi-data-${new Date().toISOString().slice(0,10)}.csv`;
+            a.click(); URL.revokeObjectURL(url);
+        }
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.records) {
+                        const existing = getRecords();
+                        const merged = [...data.records, ...existing].filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i);
+                        saveRecords(merged);
+                    }
+                    if (data.timerHistory) {
+                        const existing = getTimerHistory();
+                        const merged = [...data.timerHistory, ...existing].filter((r, i, arr) => arr.findIndex(x => x.id === r.id) === i);
+                        saveTimerHistory(merged);
+                    }
+                    if (data.goal) localStorage.setItem(GOAL_KEY, data.goal);
+                    if (data.achievements) {
+                        const existing = getUnlocked();
+                        const merged = [...new Set([...data.achievements, ...existing])];
+                        localStorage.setItem(ACH_KEY, JSON.stringify(merged));
+                    }
+                    if (data.theme) { localStorage.setItem(THEME_KEY, data.theme); if (data.theme === 'light') document.body.classList.add('light'); else document.body.classList.remove('light'); }
+                    renderHistory(); renderTimerHistory(); renderGoal(); renderAchievements(); renderCalendar();
+                    alert('导入成功！🎉');
+                } catch { alert('文件格式错误 😅'); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
         // 初始化
         renderHistory();
         renderTimerHistory();
+        renderCalendar();
+        checkAchievements();
         initFloatingText();
 
         function initFloatingText() {

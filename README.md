@@ -34,7 +34,14 @@
 
 ## 📦 使用
 
-直接打开 `index.html` 即可使用，无需安装任何东西。
+### 方式一：直接打开
+双击 `index.html` 即可在浏览器中使用。
+
+### 方式二：本地服务
+双击 `start.bat`，自动启动本地服务器（支持 Python 或 Node.js），然后访问 http://localhost:8080
+
+### 方式三：在线访问
+直接打开 [https://hbhyw.github.io/niuzi-helper/](https://hbhyw.github.io/niuzi-helper/)
 
 ## 📝 备注
 

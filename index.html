@@ -464,16 +464,10 @@
                     <div id="timerDisplay" style="font-size:3.5em;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:2px;color:var(--accent);text-shadow:0 0 20px rgba(233,69,96,0.3)">00:00:00.0</div>
                     <div id="timerScore" style="margin-top:12px;font-size:1.2em;color:var(--text-muted);transition:all 0.3s">得分: <span id="timerScoreVal" style="color:var(--gold);font-weight:700">0</span> 分</div>
                     <div style="margin-top:30px;display:flex;gap:12px;justify-content:center">
-                        <button class="btn" id="btnStart" onclick="toggleTimer()" style="width:auto;padding:14px 32px;background:linear-gradient(135deg,var(--success),#27ae60);color:white;border-radius:50px">▶ 开始</button>
-                        <button class="btn" id="btnLap" onclick="recordLap()" style="width:auto;padding:14px 24px;background:var(--bg-input);color:var(--text-muted);border-radius:50px;opacity:0.5" disabled>🏷 记圈</button>
-                        <button class="btn" onclick="resetTimer()" style="width:auto;padding:14px 24px;background:var(--bg-input);color:var(--text-muted);border-radius:50px">↺ 重置</button>
+                        <button class="btn" id="btnStart" onclick="toggleTimer()" style="width:auto;padding:14px 40px;background:linear-gradient(135deg,var(--success),#27ae60);color:white;border-radius:50px;font-size:1.1em">▶ 开始</button>
                     </div>
+                    <div style="margin-top:14px;font-size:0.8em;color:#555">暂停即保存并清零</div>
                 </div>
-            </div>
-
-            <div class="card" id="lapCard" style="display:none">
-                <div class="card-title">🏷 圈数记录</div>
-                <div class="history-list" id="lapList"></div>
             </div>
 
             <div class="card">
@@ -617,7 +611,6 @@
         let timerStart = 0;
         let timerElapsed = 0;
         let timerRunning = false;
-        let lapTimes = [];
 
         function getTimerHistory() {
             try { return JSON.parse(localStorage.getItem(TIMER_KEY) || '[]'); } catch { return []; }
@@ -667,21 +660,23 @@
 
         function toggleTimer() {
             const btn = document.getElementById('btnStart');
-            const btnLap = document.getElementById('btnLap');
             if (timerRunning) {
-                // 暂停
+                // 暂停 → 保存并清零
                 timerElapsed += performance.now() - timerStart;
                 clearInterval(timerInterval);
                 timerRunning = false;
-                btn.textContent = '▶ 继续';
-                btn.style.background = 'linear-gradient(135deg,var(--success),#27ae60)';
-                // 显示最终得分
+                saveTimerRecord(timerElapsed);
+                // 显示最终得分后重置
                 const finalScore = calculateTimerScore(timerElapsed);
                 document.getElementById('timerScoreVal').textContent = finalScore + ' 🎉';
-                btnLap.disabled = true;
-                btnLap.style.opacity = '0.5';
-                // 保存记录
-                saveTimerRecord(timerElapsed);
+                setTimeout(() => {
+                    timerElapsed = 0;
+                    timerStart = 0;
+                    document.getElementById('timerDisplay').textContent = '00:00:00.0';
+                    document.getElementById('timerScoreVal').textContent = '0';
+                    btn.textContent = '▶ 开始';
+                    btn.style.background = 'linear-gradient(135deg,var(--success),#27ae60)';
+                }, 800);
             } else {
                 // 开始
                 timerStart = performance.now();
@@ -689,49 +684,7 @@
                 timerInterval = setInterval(updateTimerDisplay, 50);
                 btn.textContent = '⏸ 暂停';
                 btn.style.background = 'linear-gradient(135deg,var(--warning),#e67e22)';
-                btnLap.disabled = false;
-                btnLap.style.opacity = '1';
             }
-        }
-
-        function recordLap() {
-            if (!timerRunning) return;
-            const now = performance.now();
-            const total = timerElapsed + now - timerStart;
-            const prevLap = lapTimes.length > 0 ? lapTimes[lapTimes.length - 1].total : 0;
-            lapTimes.push({ lap: lapTimes.length + 1, total, diff: total - prevLap });
-            renderLaps();
-        }
-
-        function renderLaps() {
-            const card = document.getElementById('lapCard');
-            const list = document.getElementById('lapList');
-            if (lapTimes.length === 0) { card.style.display = 'none'; return; }
-            card.style.display = 'block';
-            list.innerHTML = lapTimes.slice().reverse().map(l => `
-                <div class="history-item">
-                    <div>
-                        <div class="history-val">圈 ${l.lap}</div>
-                        <div class="history-date">+${formatTime(l.diff)} · 总计 ${formatTime(l.total)}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function resetTimer() {
-            clearInterval(timerInterval);
-            timerRunning = false;
-            timerElapsed = 0;
-            timerStart = 0;
-            lapTimes = [];
-            document.getElementById('timerDisplay').textContent = '00:00:00.0';
-            document.getElementById('timerScoreVal').textContent = '0';
-            const btn = document.getElementById('btnStart');
-            btn.textContent = '▶ 开始';
-            btn.style.background = 'linear-gradient(135deg,var(--success),#27ae60)';
-            document.getElementById('btnLap').disabled = true;
-            document.getElementById('btnLap').style.opacity = '0.5';
-            renderLaps();
         }
 
         function saveTimerRecord(ms) {
@@ -742,7 +695,6 @@
             history.unshift({
                 id: Date.now(),
                 duration: ms,
-                laps: lapTimes.length,
                 score: score,
                 grade: grade.grade,
                 date: new Date().toLocaleString('zh-CN')
@@ -759,17 +711,30 @@
                 list.innerHTML = '<div class="empty-state"><div class="emoji">⏱️</div><div>还没有计时记录</div></div>';
                 return;
             }
-            list.innerHTML = history.slice(0, 20).map(r => {
+            // 计算平均时长
+            const avgDuration = history.reduce((s, r) => s + r.duration, 0) / history.length;
+            const avgScore = history.reduce((s, r) => s + (r.score || 0), 0) / history.length;
+            const avgGrade = getTimerGrade(Math.round(avgScore));
+
+            let html = `<div style="background:var(--bg-input);border-radius:12px;padding:14px 16px;margin-bottom:12px;display:flex;justify-content:space-around;text-align:center">
+                <div><div style="font-size:1.3em;font-weight:700;color:var(--accent)">${history.length}</div><div style="font-size:0.7em;color:var(--text-muted)">总次数</div></div>
+                <div><div style="font-size:1.3em;font-weight:700;color:var(--gold)">${formatTimeShort(avgDuration)}</div><div style="font-size:0.7em;color:var(--text-muted)">平均时长</div></div>
+                <div><div style="font-size:1.3em;font-weight:700;color:var(--success)">${Math.round(avgScore)}分</div><div style="font-size:0.7em;color:var(--text-muted)">平均得分</div></div>
+            </div>`;
+
+            html += history.slice(0, 20).map(r => {
                 const g = r.score ? getTimerGrade(r.score) : null;
                 return `
                 <div class="history-item">
                     <div>
                         <div class="history-val">${formatTime(r.duration)} ${g ? `<span class="grade-badge grade-${g.grade}" style="font-size:0.7em;padding:2px 8px;margin-left:6px">${g.emoji} ${r.score}分</span>` : ''}</div>
-                        <div class="history-date">${r.date}${r.laps > 0 ? ' · ' + r.laps + '圈' : ''}${g ? ' · ' + g.label : ''}</div>
+                        <div class="history-date">${r.date}${g ? ' · ' + g.label : ''}</div>
                     </div>
                     <button class="history-delete" onclick="deleteTimerRecord(${r.id})" title="删除">🗑️</button>
                 </div>`;
             }).join('');
+
+            list.innerHTML = html;
         }
 
         function deleteTimerRecord(id) {

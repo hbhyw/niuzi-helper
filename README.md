@@ -65,9 +65,4 @@ docker restart niuzi-helper     # 重启
 docker rm -f niuzi-helper       # 删除容器
 ```
 
-### 方式四：在线访问
-直接打开 [https://hbhyw.github.io/niuzi-helper/](https://hbhyw.github.io/niuzi-helper/)
-
-## 📝 备注
-
 我写的Agent有两个"仓库"，一个在本地硬盘里，另一个全世界都能看。本地跑的时候一天也就调用几次，推到GitHub上，恨不得把API Key挂在首页。

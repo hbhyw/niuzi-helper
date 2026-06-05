@@ -434,11 +434,10 @@
         /* 日历热力图 */
         .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; }
         .cal-day { aspect-ratio:1; border-radius: 4px; background: var(--bg-input); display:flex; align-items:center; justify-content:center; font-size:0.65em; color:var(--text-muted); position:relative; transition: background 0.25s, color 0.25s, border-color 0.25s; }
-        .cal-day.has::after { content:''; position:absolute; bottom:2px; width:4px; height:4px; border-radius:50%; background:var(--accent); }
+        .cal-day.has { background: var(--success); color: white; }
+        .cal-day.has::after { content:''; position:absolute; bottom:2px; width:4px; height:4px; border-radius:50%; background:rgba(255,255,255,0.6); }
         .cal-day.today { border: 1.5px solid var(--accent); }
-        /* 如果当天有使用，显示绿色背景 */
-        .cal-day.has.today { background: var(--success); color: #fff; border: 1.5px solid var(--success); }
-        .cal-day.has.today::after { background: #fff; }
+        .cal-day.has.today { border: 1.5px solid var(--success); }
         .cal-label { font-size:0.6em; color:var(--text-muted); text-align:center; padding:4px 0; }
 
         /* 成就徽章 */
@@ -1269,8 +1268,8 @@ function calculateTimerScore(ms) {
             const labels = document.getElementById('calLabels');
             labels.innerHTML = ['日','一','二','三','四','五','六'].map(d => `<div class="cal-label">${d}</div>`).join('');
 
-            const records = getRecords();
-            const recordDays = new Set(records.map(r => r.date.split(' ')[0]));
+            const timerRecords = getTimerHistory();
+            const recordDays = new Set(timerRecords.map(r => r.date.split(' ')[0]));
             const grid = document.getElementById('calGrid');
             const firstDay = new Date(calYear, calMonth, 1).getDay();
             const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
@@ -1279,7 +1278,7 @@ function calculateTimerScore(ms) {
             let html = '';
             for (let i = 0; i < firstDay; i++) html += '<div class="cal-day"></div>';
             for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${calYear}/${String(calMonth+1).padStart(2,'0')}/${String(d).padStart(2,'0')}`;
+                const dateStr = `${calYear}/${calMonth+1}/${d}`;
                 const has = recordDays.has(dateStr);
                 // 更稳健的“今天”判断：比较年/月/日而非依赖区域字符串格式
                 const isToday = (calYear === today.getFullYear() && calMonth === today.getMonth() && d === today.getDate());

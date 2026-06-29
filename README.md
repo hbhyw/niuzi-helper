@@ -1,4 +1,4 @@
-[![GitHub Roast 评分徽章](https://githubroast.dev/api/badge/hbhyw)](https://githubroast.dev/u/hbhyw)
+[![GitHub Roast](https://githubroast.dev/api/card/hbhyw)](https://githubroast.dev/u/hbhyw)
 # 🐂 牛子小助手
 
 > v1.0 · 纯属娱乐，请勿过度焦虑

@@ -1,3 +1,4 @@
+<a href="https://githubroast.dev/u/hbhyw"><img src="https://githubroast.dev/api/badge/hbhyw" alt="GitHub Roast 评分徽章" /></a>
 # 🐂 牛子小助手
 
 > v1.0 · 纯属娱乐，请勿过度焦虑
